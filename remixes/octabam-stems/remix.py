@@ -13,7 +13,7 @@ STOCK14 = ("FILTER", "EQUALIZER", "DJ EQ", "PHASER", "FLANGER", "CHORUS", "SPATI
 
 REMIX = Remix(
     name="octabam-stems",
-    family="mods", proof=Proof.PORT, proof_note="builds, 21 Oct 2026; gates pending; not flashed",
+    family="mods", proof=Proof.PORT, proof_note="make check-remix under the port, 21 Oct 2026: every gate but verify_stems' takes (frame budgets); not flashed",
     doc="STEM REC with KITS, MUTE_MODES and USB (MAIN CUE and MIDI) on the 14 stock effects.",
     modules=("STEM REC", "KITS", "STORE", "MUTE_MODES", "USB", "BRAIN") + STOCK14,
     fallback="NONE",

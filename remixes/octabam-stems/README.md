@@ -29,8 +29,15 @@ ring sits above REMIX SWITCH's image stage, which it does not overlap.
 
 ## Status
 
-Builds (21 Oct 2026); `make check-remix REMIX=octabam-stems` under the
-port is pending. Not flashed.
+Under the port only, not flashed. `make check-remix REMIX=octabam-stems`
+(21 Oct 2026, EZBot's Ultimate FX 1.5.3 as the STEMS fixture): 339 pass,
+26 fail. Every gate of KITS, STORE, MUTE_MODES, USB, BRAIN, REMIX SWITCH
+and the boot passes. The failures are `verify_stems`' takes, as on the
+`stems` remix and on `main` itself under today's port: the writer is
+still saving when a run's frames end (`master` passes at 1,200 frames
+instead of 300). One differs from `stems`: `cardfail`'s refused write
+does not hang the writer here (state IDLE, 20 sectors), not yet
+explained.
 
 ## Build
 
