@@ -7,8 +7,9 @@ chainloader boots it, and every refusal boots the flashed image instead.
 
 Builds the remix (the HOME image: what NOR would hold), then:
 
-  layout   the platform runtime and its stage end below the mailbox: the
-           top of the reserve is the switch's, in every remix carrying it
+  layout   the platform runtime, its stage and .bss end below the mailbox,
+           and no module's DRAM region overlaps the switch's stage (one
+           may sit above it: STEM REC's ring with octabam-core)
   ui       an MKII (`--mkii`: the reset sends the panel `60 02` first) with a
            card holding STOCK140.RMX (the user's own stock MAIN OS, copied
            at run time); PROJ opens MAIN MENU > BRAIN (the list in /BRAIN/REMIXES/, scanned),
@@ -188,13 +189,21 @@ def main():
 
     # ---- layout: the runtime stays below the switch's pages ---------------
     lay = json.loads((ROOT / "out/platform/layout.json").read_text())
-    # the top of everything the platform places: the runtime, its stage,
-    # the units' .bss (never loaded: KITS's library, PLOCKS P2's table) and
-    # the modules' DRAM regions
-    top = max([lay.get("stage_end", 0), lay.get("bss_end", 0)]
-              + [a + n for a, n in lay.get("regions", {}).values()])
-    check("layout: the platform runtime, its stage, .bss and regions end below the mailbox",
+    # the top of what the platform links and loads: the runtime, its stage
+    # and the units' .bss (never loaded: KITS's library, PLOCKS P2's table)
+    top = max(lay.get("stage_end", 0), lay.get("bss_end", 0))
+    check("layout: the platform runtime, its stage and .bss end below the mailbox",
           top <= MBOX, f"..0x{top:08x}, mailbox 0x{MBOX:08x}")
+    # a module's DRAM region may sit on either side of the stage, never in
+    # it: the platform stacks regions below any fixed claim, and above it
+    # when they don't fit below (STEM REC's 8 MiB ring with octabam-core's
+    # runtime). Above it nothing between the reset and the chainload writes
+    # (the bootstrap unpacks the flashed image only, at 0x40000400).
+    end = cached(C["OSW_END"])
+    inside = sorted(f"{k} 0x{a:08x}..0x{a + n:08x}" for k, (a, n) in lay.get("regions", {}).items()
+                    if a < end and MBOX < a + n)
+    check("layout: no DRAM region overlaps the stage (the mailbox to its end)",
+          not inside, f"{inside or 'none'}, stage 0x{MBOX:08x}..0x{end:08x}")
 
     # ---- ui: the row, the dialog, the load, the reset sequence ------------
     tree = work / "card"

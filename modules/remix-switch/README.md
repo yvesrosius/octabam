@@ -104,7 +104,11 @@ unmeasured.)
 stub `0x49200100`, the chainloader's body `0x49200400`, image `0x49201000..0x49495de0` (uncached aliases). Stock
 never touches the reserve, and nothing between a reset and the OS entry
 writes it (the bootstrap only unpacks the image). The gate checks that the
-remix's own runtime ends below the mailbox.
+remix's own runtime ends below the mailbox and that no module's DRAM
+region overlaps the stage. A region may sit above it when it doesn't fit
+below: STEM REC's 8 MiB ring with octabam-core's runtime lands at
+`0x41496de0..0x41c96de0`, which nothing between a reset and the
+chainload writes.
 
 **Why the OS entry and not the boot detour.** The DSP upload at
 `0x40001e50` assumes both cores sit in their HI08 boot ROM, which only a

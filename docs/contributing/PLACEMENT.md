@@ -160,7 +160,9 @@ writes it just before a reset and the next boot's OS entry reads it before
 anything else runs; nothing between a reset and the OS entry writes SDRAM
 outside the image the bootstrap unpacks (`docs/firmware/ARCHITECTURE.md`
 section 3a). In a remix carrying the module, `verify_remix_switch` refuses a
-runtime and stage that reach the mailbox.
+runtime and stage that reach the mailbox, and a DRAM region that overlaps
+the stage. A region that doesn't fit below the stage is placed above it
+(`platform_build.place_regions`): STEM REC's ring with octabam-core.
 
 The OS never touches a reservation again: the arena clear starts at the
 new base, the boot-time copies follow the literal, and the page allocator
