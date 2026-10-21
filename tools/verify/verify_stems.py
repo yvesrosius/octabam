@@ -144,14 +144,20 @@ def rd32(img, a):
     return int.from_bytes(img[a - BASE:a - BASE + 4], "big")
 
 
-def static(img, stock, s):
+def static(img, stock, s, brain=False):
+    """STEM REC leaves MAIN MENU's root alone. BRAIN owns its fifth
+    category (remixes/test/stems-brain): with BRAIN the root has five rows,
+    in BRAIN's array in DRAM, which BRAIN's own gates check."""
     n = rd32(img, ROOT_DESC)
-    check("MAIN MENU root stays stock (four categories)", n == ROOT_N, f"{n}")
-    rows = rd32(img, ROOT_DESC + 0x18)
-    check("the root rows pointer is stock", rows == ROOT_ROWS, f"0x{rows:08x}")
-    a, b = ROOT_ROWS - BASE, ROOT_ROWS - BASE
-    check("the four stock categories came across byte for byte",
-          img[a:a + ROW_LEN * ROOT_N] == stock[b:b + ROW_LEN * ROOT_N])
+    if brain:
+        check("MAIN MENU root: the four stock categories and BRAIN's", n == ROOT_N + 1, f"{n}")
+    else:
+        check("MAIN MENU root stays stock (four categories)", n == ROOT_N, f"{n}")
+        rows = rd32(img, ROOT_DESC + 0x18)
+        check("the root rows pointer is stock", rows == ROOT_ROWS, f"0x{rows:08x}")
+        a = ROOT_ROWS - BASE
+        check("the four stock categories came across byte for byte",
+              img[a:a + ROW_LEN * ROOT_N] == stock[a:a + ROW_LEN * ROOT_N])
     check("PROJECT stays stock (fifteen rows)", rd32(img, PROJECT_DESC) == PROJECT_N,
           f"{rd32(img, PROJECT_DESC)}")
     c = CONTROL_DESC - BASE
@@ -2014,7 +2020,7 @@ def main():
         tail = (r.stdout + r.stderr).strip().splitlines()
         sys.exit(f"{name}: build failed: {tail[-1] if tail else '?'}")
     img, stock, s = IMAGE.read_bytes(), STOCK.read_bytes(), syms()
-    static(img, stock, s)
+    static(img, stock, s, brain="BRAIN" in registry.remix(name).modules)
     menu_static(s)
     regions(s)
     check("the card-out parse reads upstream's line and refuses crosscheck's",
